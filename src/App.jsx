@@ -30,9 +30,25 @@ function App() {
     if(!tareaForm.trim()){
       console.log('Está vacío')
       return
+    // Agregando tareas a Firebase
+    }
+    try {
+      const db = firebase.firestore()
+      const nuevaTarea = {
+        name: tareaForm,
+        fecha: Date.now()
+      }
+      const data = await db.collection('tareas').add(nuevaTarea)
+
+      setTareas([
+        ...tareas,
+        {...nuevaTarea, id: data.id} // Al colocar esto estamos colocando el name y la fecha implicitamente
+      ])
+      setTareaForm('')
+    } catch(error) {
+      console.log(error)
     }
     console.log(tareaForm)
-
   }
 
   return (
