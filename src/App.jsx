@@ -51,6 +51,20 @@ function App() {
     console.log(tareaForm)
   }
 
+  const eliminar = async (id) =>{
+    try {
+      const db = firebase.firestore()
+      await db.collection('tareas').doc(id).delete()
+
+      // Vamos a filtrar cuando tarea.id sea distinto al id que pasamos como parametro
+      // Si es igual lo va a retirar
+      const arrayFiltrado = tareas.filter(tarea => tarea.id !== id)
+      setTareas(arrayFiltrado)
+    } catch(error) {
+      console.log(error)
+    }
+  }
+
   return (
     <div className="container mt-3">
       <div className="row">
@@ -61,6 +75,10 @@ function App() {
               tareas.map(tarea => (
                 <li className="list-group-item" key={tarea.id}>
                   {tarea.name}
+                  <button className="btn btn-danger btn-sm float-right"
+                  onClick={() => eliminar(tarea.id)}>Eliminar</button>
+                  <button className="btn btn-warning btn-sm float-right mr-2">Editar</button>
+
                 </li>
               ))
             }
