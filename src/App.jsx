@@ -4,6 +4,9 @@ import {firebase} from './firebase'
 function App() {
   const [tareas, setTareas] = useState([])
   const [tareaForm, setTareaForm] = useState('')
+  const [editMode, setEditMode] = useState(false)
+  const [id, setId] = useState('')
+
   useEffect(() => {
     const obtenerDatos = async () => {
       try{
@@ -65,6 +68,43 @@ function App() {
     }
   }
 
+  const activateEdition = (tarea) => {
+    setEditMode(true)
+    setTareaForm(tarea.name)
+    setId(tarea.id)
+  }
+
+  const editar =  async (e) => {
+    e.preventDefault()
+    if(!tareaForm.trim()){
+      console.log('Está vacío')
+      return
+    }
+    try{
+      const db = firebase.firestore()
+      // Con update no necesitamos pasar todo el objeto sino solo el campo a utilizar
+      await db.collection('tareas').doc(id).update({
+        name: tareaForm
+      })
+      // Devolvemos un objeto que se va a guardar en el array editado
+      // Si el id no coincide devolvemos el item sin modificación
+      const arrayEditado = tareas.map(item => (
+        item.id === id ? {
+          id: item.id,
+          fecha: item.fecha,
+          name: tareaForm
+        } : item
+      ))
+      setTareas(arrayEditado)
+      setEditMode(false)
+      setTareaForm('')
+      setId('')
+
+    }catch(error){
+      console.log(error)
+    }
+  }
+
   return (
     <div className="container mt-3">
       <div className="row">
@@ -77,7 +117,10 @@ function App() {
                   {tarea.name}
                   <button className="btn btn-danger btn-sm float-right"
                   onClick={() => eliminar(tarea.id)}>Eliminar</button>
-                  <button className="btn btn-warning btn-sm float-right mr-2">Editar</button>
+                  <button 
+                    className="btn btn-warning btn-sm float-right mr-2"
+                    onClick={()=> activateEdition(tarea)}
+                    >Editar</button>
 
                 </li>
               ))
@@ -85,8 +128,12 @@ function App() {
           </ul>
         </div>
         <div className="col-md-6">
-          <h3>Formulario</h3>
-          <form onSubmit={agregar}>
+          <h3>
+            {
+            editMode? 'Editar Tarea': 'Agregar Tarea'
+          }
+          </h3>
+          <form onSubmit={editMode ? editar : agregar}>
             <input 
             type="text"
             placeholder='Ingrese tarea'
@@ -94,8 +141,12 @@ function App() {
             onChange={e => setTareaForm(e.target.value)} 
             value={tareaForm}/>
             <button
-              className="btn btn-dark btn-block"
-              type='submit'>Agregar</button>
+              className={
+                editMode? "btn btn-warning btn-block" : "btn btn-dark btn-block"
+              }
+              type='submit'>
+                {editMode? 'Editar': 'Agregar'}
+              </button>
           </form>
         </div>
       </div>
